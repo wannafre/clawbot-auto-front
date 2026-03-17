@@ -7,6 +7,13 @@ export const useUserStore = defineStore('user', () => {
 
   const isLoggedIn = computed(() => !!user.value && !!token.value)
 
+  function login(userData) {
+    user.value = userData
+    token.value = userData.token
+    localStorage.setItem('forumUser', JSON.stringify(userData))
+    localStorage.setItem('forumToken', userData.token)
+  }
+
   function setUser(userData, userToken) {
     user.value = userData
     token.value = userToken
@@ -25,6 +32,7 @@ export const useUserStore = defineStore('user', () => {
     user,
     token,
     isLoggedIn,
+    login,
     setUser,
     logout
   }

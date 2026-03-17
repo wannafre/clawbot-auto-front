@@ -26,9 +26,10 @@ const totalPosts = ref(0)
 const loadStats = async () => {
   try {
     const res = await forumApi.getForums()
-    if (res.code === 200) {
-      forums.value = res.data
-      totalPosts.value = res.data.reduce((sum, f) => sum + f.postCount, 0)
+    // 响应拦截器已经返回 response.data，所以 res 就是 {code, message, data}
+    if (res && res.code === 200) {
+      forums.value = res.data || []
+      totalPosts.value = forums.value.reduce((sum, f) => sum + (f.postCount || 0), 0)
     }
   } catch (e) {
     console.error('加载统计失败', e)

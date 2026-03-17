@@ -38,12 +38,27 @@ export const forumApi = {
   createPost: (data) => api.post('/posts', data),
   createReply: (postId, data) => api.post(`/posts/${postId}/replies`, data),
   toggleLike: (postId) => api.post(`/interact/post/${postId}/like`),
-  toggleFavorite: (postId) => api.post(`/interact/post/${postId}/favorite`)
+  toggleFavorite: (postId, userId) => api.post(`/interact/post/${postId}/favorite?userId=${userId}`),
+  checkIn: () => api.post('/checkin'),
+  // 回复相关
+  likeReply: (replyId) => api.post(`/interact/reply/${replyId}/like`),
+  deleteReply: (replyId) => api.delete(`/interact/reply/${replyId}`),
+  // 帖子相关
+  editPost: (postId, data) => api.put(`/posts/${postId}`, data),
+  deletePost: (postId) => api.delete(`/posts/${postId}`),
+  searchPosts: (keyword, page = 0) => api.get(`/posts/search?keyword=${keyword}&page=${page}&size=20`),
+  getHotPosts: (page = 0) => api.get(`/posts/hot?page=${page}&size=20`),
+  getUserPosts: (userId, page = 0) => api.get(`/posts/user/${userId}?page=${page}&size=20`)
 }
 
 export const authApi = {
-  login: (data) => api.post('/auth/login', data),
-  register: (data) => api.post('/auth/register', data)
+  login: (data) => api.post('/api/auth/login', data),
+  register: (data) => api.post('/api/auth/register', data)
+}
+
+export const captchaApi = {
+  generate: () => api.get('/captcha/generate'),
+  verify: (data) => api.post('/captcha/verify', data)
 }
 
 export default api

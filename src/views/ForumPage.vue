@@ -13,7 +13,7 @@
     <div class="post-list" v-if="posts.length > 0">
       <router-link v-for="post in posts" :key="post.id" :to="`/post/${post.id}`" class="post-item">
         <div class="post-header">
-          <div class="post-avatar">{{ getAuthorInitial(post.author?.username) }}</div>
+          <div class="post-avatar">{{ getAuthorInitial(post.authorName) }}</div>
           <div class="post-content">
             <div class="post-title">
               <span v-if="post.isTop" class="tag tag-hot">🔥 置顶</span>
@@ -21,7 +21,7 @@
               {{ post.title }}
             </div>
             <div class="post-meta">
-              <span class="post-author">👤 {{ post.author?.username || '未知' }}</span>
+              <span class="post-author">👤 {{ post.authorName || '未知' }}</span>
               <span>📅 {{ formatDate(post.createdAt) }}</span>
             </div>
             <div class="post-stats">
@@ -51,27 +51,17 @@
       </button>
       <button class="page-btn" @click="nextPage" :disabled="page >= totalPages - 1">下一页 →</button>
     </div>
-    
-    <!-- 发帖弹窗 -->
-    <div class="modal-overlay" v-if="showPostForm" @click.self="showPostForm = false">
-      <div class="modal">
-        <div class="modal-header">
-          <div class="modal-title">📝 发新帖</div>
-          <button class="modal-close" @click="showPostForm = false">×</button>
-        </div>
-        <div class="modal-body">
-          <PostForm :forumId="forumId" @success="handlePostSuccess" @cancel="showPostForm = false" />
-        </div>
-      </div>
-    </div>
   </div>
+  
+  <!-- 发帖弹窗（顶层） -->
+  <NewPostModal v-model="showPostForm" :forumId="forumId" @success="handlePostSuccess" />
 </template>
 
 <script setup>
 import { ref, computed, onMounted, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { forumApi } from '../api'
-import PostForm from '../components/PostForm.vue'
+import NewPostModal from '../components/NewPostModal.vue'
 
 const route = useRoute()
 const forum = ref(null)
@@ -113,11 +103,13 @@ const formatDate = (dateStr) => {
 const loadForum = async () => {
   try {
     const res = await forumApi.getForum(forumId.value)
-    if (res.code === 200) {
-      forum.value = res.data
+    if (res && res.code === 200) {
+      forum.value = res.data || null
+    } else {
+      window.showToast('加载板块失败', 'error')
     }
   } catch (e) {
-    window.showToast('加载板块失败', 'error')
+    window.showToast('加载板块失败：网络错误', 'error')
   }
 }
 
@@ -125,18 +117,19 @@ const loadPosts = async () => {
   loaded.value = false
   try {
     const res = await forumApi.getPosts(forumId.value, page.value)
-    if (res.code === 200) {
-      posts.value = res.data.content || []
-      totalPages.value = res.data.totalPages || 0
+    if (res && res.code === 200) {
+      posts.value = res.data?.content || []
+      totalPages.value = res.data?.totalPages || 0
+    } else {
+      window.showToast('加载帖子失败', 'error')
     }
   } catch (e) {
-    window.showToast('加载帖子失败', 'error')
+    window.showToast('加载帖子失败：网络错误', 'error')
   }
   loaded.value = true
 }
 
 const handlePostSuccess = () => {
-  showPostForm.value = false
   loadPosts()
 }
 
@@ -385,8 +378,10 @@ onMounted(() => {
   border-radius: 28px;
   box-shadow: 0 20px 60px rgba(0,0,0,0.16);
   width: 100%;
-  max-width: 600px;
-  overflow: hidden;
+  max-width: 800px;
+  max-height: 90vh;
+  overflow-y: auto;
+  overflow-x: hidden;
   animation: slideUp 0.3s;
 }
 

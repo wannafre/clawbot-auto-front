@@ -19,38 +19,57 @@
         <button class="btn btn-outline" @click="handleLogout">退出</button>
       </template>
       <template v-else>
-        <button class="btn btn-primary" @click="handleLogin">🔑 登录</button>
+        <button class="btn btn-primary" @click="showLoginModal = true">🔑 登录</button>
       </template>
     </div>
+    
+    <!-- 登录弹窗 -->
+    <LoginModal v-model="showLoginModal" @success="handleLoginSuccess" />
   </header>
 </template>
 
 <script setup>
+import { ref } from 'vue'
 import { useUserStore } from '../stores/user'
 import { forumApi } from '../api'
+import LoginModal from './LoginModal.vue'
 
 const userStore = useUserStore()
+const showLoginModal = ref(false)
 
-const handleHot = () => window.showToast('热门功能开发中～', 'info')
-const handleNew = () => window.showToast('最新功能开发中～', 'info')
+const handleHot = () => {
+  window.location.hash = '/hot'
+}
+
+const handleNew = () => {
+  window.location.hash = '/new'
+}
 
 const handleCheckIn = async () => {
   if (!userStore.isLoggedIn) {
     window.showToast('请先登录再签到', 'warning')
+    showLoginModal.value = true
     return
   }
+  
   try {
     const res = await forumApi.checkIn()
     if (res.code === 200) {
-      window.showToast(res.data.message, 'success')
+      if (res.data.alreadyCheckedIn) {
+        window.showToast(res.data.message, 'info')
+      } else {
+        window.showToast(`✅ ${res.data.message} (+${res.data.exp}经验)`, 'success')
+      }
+    } else {
+      window.showToast(res.message || '签到失败', 'error')
     }
   } catch (e) {
-    window.showToast('签到失败', 'error')
+    window.showToast('签到失败：' + e.message, 'error')
   }
 }
 
-const handleLogin = () => {
-  window.showToast('登录功能开发中～', 'info')
+const handleLoginSuccess = () => {
+  window.showToast('欢迎回来！', 'success')
 }
 
 const handleLogout = () => {

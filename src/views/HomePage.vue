@@ -51,11 +51,14 @@ const getForumClass = (name) => {
 const loadForums = async () => {
   try {
     const res = await forumApi.getForums()
-    if (res.code === 200) {
-      forums.value = res.data
+    // 响应拦截器已经返回 response.data
+    if (res && res.code === 200) {
+      forums.value = res.data || []
+    } else {
+      window.showToast('加载板块失败', 'error')
     }
   } catch (e) {
-    window.showToast('加载板块失败', 'error')
+    window.showToast('加载板块失败：网络错误', 'error')
   }
 }
 
